@@ -38,38 +38,38 @@ def get_vid(query):
 
 def create_youtube_url(command):
 
-  text = command.lower().strip()
+    text = command.lower().strip()
 
-  pattern = {
-    r"play\s+song\s+(+)",
-    r"play\s+music\s+(.+)",
-    r"play\s+(.+)",
-    r"youtube\s+(.+)"
-  }
+    patterns = [
+        r"play\s+song\s+(.+)",
+        r"play\s+music\s+(.+)",
+        r"play\s+(.+)",
+        r"youtube\s+(.+)"
+    ]
 
-  query = command
+    query = command
 
-  for pattern in patterns:
+    for pattern in patterns:
 
-    match = re.search(
-        pattern,
-        text
+        match = re.search(
+            pattern,
+            text
+        )
+
+        if match:
+
+            query = match.group(1)
+            break
+
+    query = query.strip()
+
+    video_id = get_vid(query)
+
+    if not video_id:
+        return None
+
+    return (
+        "https://www.youtube.com/embed/"
+        + video_id
+        + "?autoplay=1&mute=0"
     )
-
-    if match:
-
-        query = match.group(1)
-        break
-query = query.strip()
-
-video_id = get_vid(query)
-
-if not video_id:
-    return None
-
-return (
-    "https://www.youtube.com/embed/"
-    + video_id
-    + "?autoplay=1&mute=0"
-)
-  
