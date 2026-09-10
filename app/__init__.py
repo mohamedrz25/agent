@@ -17,23 +17,22 @@ def create_app():
     app = Flask(__name__)
     CORS(app)
 
-    # YouTube
+
     app.register_blueprint(
         youtube_bp,
         url_prefix="/youtube"
     )
 
-    # Home
+  
     @app.route("/")
     def home():
         return render_template("index.html")
 
-    # HTML
     @app.route("/html")
     def html():
         return render_template("index.html")
-
-    # Health
+        
+   
     @app.route("/health")
     def health():
         return jsonify({
@@ -41,7 +40,7 @@ def create_app():
             "service": "Nova AI Agent"
         })
 
-    # Gmail AI Agent
+   
     @app.route("/agent", methods=["POST"])
     def agent():
 
