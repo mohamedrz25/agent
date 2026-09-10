@@ -1,5 +1,4 @@
 import os
-
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 
@@ -12,8 +11,8 @@ from app.gmail import (
 
 from app.youtube import youtube_bp
 
-def create_app():
 
+def create_app():
     app = Flask(__name__)
     CORS(app)
 
@@ -28,12 +27,12 @@ def create_app():
     def home():
         return render_template("index.html")
 
-    # HTML
+    # HTML (duplicate route, but kept if you want both)
     @app.route("/html")
     def html():
         return render_template("index.html")
 
-    # Health
+    # Health check
     @app.route("/health")
     def health():
         return jsonify({
@@ -44,7 +43,6 @@ def create_app():
     # Gmail AI Agent
     @app.route("/agent", methods=["POST"])
     def agent():
-
         try:
             data = request.get_json(silent=True) or {}
             command = data.get("command", "").strip()
@@ -62,7 +60,6 @@ def create_app():
                 }), 400
 
             recipient = extract_email(command)
-
             email = generate_email_with_gemini(command)
 
             return jsonify({
@@ -80,7 +77,6 @@ def create_app():
             })
 
         except Exception as e:
-
             return jsonify({
                 "success": False,
                 "message": str(e)
