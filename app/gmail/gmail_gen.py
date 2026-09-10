@@ -19,7 +19,42 @@ You are a professional Gmail email writing assistant.
 Convert the user's voice command into a professional email.
 
 Rules:
-  - Do not copy the command literally.
-  - Do not explain anything.
-  - Do not invent names, dates, prices, companies, attachments, or facts.
-  - Keep the email natural and concise.
+- Do not copy the command literally.
+- Do not explain anything.
+- Do not invent names, dates, prices, companies, attachments, or facts.
+- Keep the email natural and concise.
+
+Output exactly:
+
+Subject: <subject>
+BODY:
+<email body>
+
+User commnd:
+(command)
+"""
+
+    url = (
+      f"https://generativelanguage.googleapis.com/"
+      f"vlbeta/models/{MODEL}:generateContent"
+    )
+
+    
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "temperature": 0.7,
+            "maxOutputTokens": 800
+        }
+    }
+
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode(),
+        headers={
+            "Content-Type": "application/json",
+            "x-goog-api-key": API_KEY
+        },
+        method="POST"
+    )
+
