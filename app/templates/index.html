@@ -1,793 +1,906 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Nova AI Gmail Agent</title>
-
-  <style>
-    :root {
-      --bg: #f5f7fb;
-      --panel: #ffffff;
-      --sidebar: #101827;
-      --sidebar-light: #1d2939;
-      --text: #172033;
-      --muted: #667085;
-      --border: #e4e7ec;
-      --primary: #635bff;
-      --primary-dark: #5148dc;
-      --success: #12b76a;
-      --danger: #f04438;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: Inter, Arial, sans-serif;
-      color: var(--text);
-      background: var(--bg);
-    }
-
-    button,
-    input,
-    textarea {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    .app {
-      display: grid;
-      grid-template-columns: 245px 1fr;
-      min-height: 100vh;
-    }
-
-    /* Sidebar */
-
-    .sidebar {
-      display: flex;
-      flex-direction: column;
-      padding: 24px 16px;
-      color: white;
-      background: var(--sidebar);
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 0 12px 38px;
-      font-size: 21px;
-      font-weight: 700;
-    }
-
-    .brand-icon {
-      display: grid;
-      width: 36px;
-      height: 36px;
-      place-items: center;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #7b61ff, #27a8ff);
-    }
-
-    .compose {
-      width: 100%;
-      padding: 13px;
-      margin-bottom: 25px;
-      border: 0;
-      border-radius: 10px;
-      color: white;
-      background: var(--primary);
-      font-weight: 600;
-    }
-
-    .compose:hover {
-      background: var(--primary-dark);
-    }
-
-    .nav {
-      display: grid;
-      gap: 6px;
-    }
-
-    .nav button {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      width: 100%;
-      padding: 12px;
-      border: 0;
-      border-radius: 8px;
-      color: #cbd5e1;
-      background: transparent;
-      text-align: left;
-    }
-
-    .nav button:hover,
-    .nav button.active {
-      color: white;
-      background: var(--sidebar-light);
-    }
-
-    .sidebar-footer {
-      margin-top: auto;
-      padding: 14px 12px;
-      border-top: 1px solid #293548;
-      color: #98a2b3;
-      font-size: 13px;
-    }
-
-    .connection {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      margin-top: 8px;
-      color: #6ce9a6;
-    }
-
-    .connection::before {
-      content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #12b76a;
-    }
-
-    /* Main area */
-
-    .main {
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      padding: 18px 28px;
-      border-bottom: 1px solid var(--border);
-      background: var(--panel);
-    }
-
-    .search {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      width: min(520px, 100%);
-      padding: 11px 14px;
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      color: var(--muted);
-      background: #f9fafb;
-    }
-
-    .search input {
-      width: 100%;
-      border: 0;
-      outline: 0;
-      color: var(--text);
-      background: transparent;
-    }
-
-    .profile {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      white-space: nowrap;
-      font-size: 14px;
-    }
-
-    .avatar {
-      display: grid;
-      width: 36px;
-      height: 36px;
-      place-items: center;
-      border-radius: 50%;
-      color: white;
-      background: var(--primary);
-      font-weight: 600;
-    }
-
-    .workspace {
-      display: grid;
-      grid-template-columns: minmax(420px, 1fr) 380px;
-      gap: 22px;
-      padding: 28px;
-    }
-
-    .panel {
-      min-width: 0;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      background: var(--panel);
-      box-shadow: 0 2px 8px rgba(16, 24, 40, .04);
-    }
-
-    .panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 22px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .panel-header h2 {
-      margin: 0;
-      font-size: 19px;
-    }
-
-    .panel-header span {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    /* Email list */
-
-    .email {
-      display: grid;
-      grid-template-columns: 30px 1fr auto;
-      gap: 13px;
-      padding: 18px 22px;
-      border-bottom: 1px solid var(--border);
-      transition: background .2s;
-    }
-
-    .email:hover {
-      background: #f9fafb;
-    }
-
-    .email:last-child {
-      border-bottom: 0;
-    }
-
-    .email.unread {
-      background: #f7f7ff;
-    }
-
-    .email-check {
-      width: 17px;
-      height: 17px;
-    }
-
-    .email-main {
-      min-width: 0;
-    }
-
-    .email-sender {
-      margin-bottom: 5px;
-      font-weight: 600;
-    }
-
-    .email-subject {
-      overflow: hidden;
-      margin-bottom: 4px;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 14px;
-    }
-
-    .email-preview {
-      overflow: hidden;
-      color: var(--muted);
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 13px;
-    }
-
-    .email-time {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    /* AI panel */
-
-    .ai-panel {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .ai-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 20px;
-      color: white;
-      background: linear-gradient(135deg, #635bff, #847bff);
-    }
-
-    .ai-header h2 {
-      margin: 0 0 4px;
-      font-size: 18px;
-    }
-
-    .ai-header p {
-      margin: 0;
-      opacity: .85;
-      font-size: 13px;
-    }
-
-    .ai-icon {
-      display: grid;
-      width: 42px;
-      height: 42px;
-      place-items: center;
-      border-radius: 12px;
-      background: rgba(255,255,255,.2);
-      font-size: 21px;
-    }
-
-    .ai-content {
-      padding: 20px;
-    }
-
-    .suggestion {
-      padding: 14px;
-      margin-bottom: 12px;
-      border: 1px solid #e7e5ff;
-      border-radius: 10px;
-      background: #f8f7ff;
-    }
-
-    .suggestion strong {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 14px;
-    }
-
-    .suggestion p {
-      margin: 0 0 12px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .suggestion button {
-      padding: 8px 11px;
-      border: 0;
-      border-radius: 7px;
-      color: white;
-      background: var(--primary);
-      font-size: 12px;
-    }
-
-    .ai-input {
-      display: flex;
-      gap: 8px;
-      padding: 16px 20px;
-      border-top: 1px solid var(--border);
-    }
-
-    .ai-input input {
-      min-width: 0;
-      flex: 1;
-      padding: 10px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      outline: 0;
-    }
-
-    .ai-input button {
-      width: 42px;
-      border: 0;
-      border-radius: 8px;
-      color: white;
-      background: var(--primary);
-    }
-
-    /* Compose modal */
-
-    .modal {
-      position: fixed;
-      inset: 0;
-      display: none;
-      place-items: center;
-      padding: 20px;
-      background: rgba(16, 24, 40, .45);
-    }
-
-    .modal.show {
-      display: grid;
-    }
-
-    .compose-window {
-      width: min(600px, 100%);
-      overflow: hidden;
-      border-radius: 14px;
-      background: white;
-      box-shadow: 0 20px 50px rgba(0,0,0,.25);
-    }
-
-    .compose-title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 17px 20px;
-      color: white;
-      background: var(--sidebar);
-    }
-
-    .close {
-      border: 0;
-      color: white;
-      background: transparent;
-      font-size: 20px;
-    }
-
-    .compose-form {
-      display: grid;
-      gap: 12px;
-      padding: 20px;
-    }
-
-    .compose-form input,
-    .compose-form textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      outline: 0;
-    }
-
-    .compose-form textarea {
-      min-height: 190px;
-      resize: vertical;
-    }
-
-    .compose-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .ai-generate {
-      border: 0;
-      color: var(--primary);
-      background: transparent;
-      font-weight: 600;
-    }
-
-    .send {
-      padding: 11px 20px;
-      border: 0;
-      border-radius: 8px;
-      color: white;
-      background: var(--primary);
-    }
-
-    @media (max-width: 950px) {
-      .workspace {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 700px) {
-      .app {
-        grid-template-columns: 1fr;
-      }
-
-      .sidebar {
-        display: none;
-      }
-
-      .workspace {
-        padding: 15px;
-      }
-
-      .topbar {
-        padding: 15px;
-      }
-    }
-  </style>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+>
+
+<title>Nova AI</title>
+
+
+<style>
+
+body{
+
+    margin:0;
+
+    height:100vh;
+
+    display:grid;
+
+    place-items:center;
+
+    background:#111;
+
+    color:white;
+
+    font-family:Arial;
+}
+
+
+.card{
+
+    width:400px;
+
+    padding:25px;
+
+    text-align:center;
+
+    background:#222;
+
+    border:1px solid #444;
+
+    border-radius:10px;
+}
+
+
+.mic{
+
+    width:75px;
+
+    height:75px;
+
+    border:0;
+
+    border-radius:50%;
+
+    font-size:30px;
+
+    cursor:pointer;
+
+    background:#eee;
+}
+
+
+.mic.listening{
+
+    background:#aaa;
+}
+
+
+.status{
+
+    margin:15px;
+
+    color:#aaa;
+}
+
+
+.command{
+
+    margin:10px;
+
+    color:#ccc;
+}
+
+
+.editor{
+
+    display:none;
+
+    margin-top:20px;
+
+    text-align:left;
+}
+
+
+.recipient{
+
+    color:#aaa;
+
+    font-size:13px;
+}
+
+
+input,
+textarea{
+
+    width:100%;
+
+    margin:6px 0;
+
+    padding:10px;
+
+    box-sizing:border-box;
+
+    background:#111;
+
+    color:white;
+
+    border:1px solid #444;
+
+    border-radius:5px;
+}
+
+
+textarea{
+
+    height:130px;
+
+    resize:vertical;
+}
+
+
+button.action{
+
+    padding:10px 14px;
+
+    margin-top:5px;
+
+    border:0;
+
+    border-radius:5px;
+
+    cursor:pointer;
+}
+
+
+.primary{
+
+    background:#666;
+
+    color:white;
+}
+
+</style>
+
 </head>
+
 
 <body>
 
-  <div class="app">
 
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-icon">✦</div>
-        Nova AI
-      </div>
+<div class="card">
 
-      <button class="compose" id="composeButton">
-        ＋ Compose email
-      </button>
 
-      <nav class="nav">
-        <button class="active">📥 Inbox <strong>12</strong></button>
-        <button>⭐ Starred</button>
-        <button>📤 Sent</button>
-        <button>📝 Drafts <strong>3</strong></button>
-        <button>🗑 Trash</button>
-      </nav>
+<h2>Nova AI</h2>
 
-      <div class="sidebar-footer">
-        Gmail account
-        <div class="connection">Connected securely</div>
-      </div>
-    </aside>
 
-    <main class="main">
+<p>
+    Say a song name or create an email
+</p>
 
-      <header class="topbar">
-        <div class="search">
-          🔍
-          <input id="searchInput" placeholder="Search emails...">
-        </div>
 
-        <div class="profile">
-          <div>
-            <strong>Alex Morgan</strong><br>
-            <small>alex@example.com</small>
-          </div>
-          <div class="avatar">AM</div>
-        </div>
-      </header>
+<button
+    id="mic"
+    class="mic"
+>
+    🎙️
+</button>
 
-      <section class="workspace">
 
-        <div class="panel">
-          <div class="panel-header">
-            <div>
-              <h2>Inbox</h2>
-              <span>12 unread messages</span>
-            </div>
-            <span>Refresh ⟳</span>
-          </div>
+<div
+    id="status"
+    class="status"
+>
+    Tap microphone
+</div>
 
-          <div id="emailList">
 
-            <article class="email unread">
-              <input class="email-check" type="checkbox">
+<div
+    id="command"
+    class="command"
+></div>
 
-              <div class="email-main">
-                <div class="email-sender">Sarah Johnson</div>
-                <div class="email-subject">
-                  Project update and next steps
-                </div>
-                <div class="email-preview">
-                  Hi Alex, I wanted to share the latest progress...
-                </div>
-              </div>
 
-              <time class="email-time">09:42</time>
-            </article>
 
-            <article class="email unread">
-              <input class="email-check" type="checkbox">
+<!-- Gmail Editor -->
 
-              <div class="email-main">
-                <div class="email-sender">Google Cloud</div>
-                <div class="email-subject">
-                  Your monthly usage report
-                </div>
-                <div class="email-preview">
-                  Your usage report for this month is now available...
-                </div>
-              </div>
+<div
+    id="editor"
+    class="editor"
+>
 
-              <time class="email-time">Yesterday</time>
-            </article>
 
-            <article class="email">
-              <input class="email-check" type="checkbox">
+    <div
+        id="recipient"
+        class="recipient"
+    ></div>
 
-              <div class="email-main">
-                <div class="email-sender">Michael Chen</div>
-                <div class="email-subject">
-                  Meeting confirmation
-                </div>
-                <div class="email-preview">
-                  Confirming our meeting scheduled for Thursday...
-                </div>
-              </div>
 
-              <time class="email-time">Mon</time>
-            </article>
+    <input
+        id="subject"
+        placeholder="Email subject"
+    >
 
-          </div>
-        </div>
 
-        <aside class="panel ai-panel">
+    <textarea
+        id="body"
+        placeholder="Email body"
+    ></textarea>
 
-          <div class="ai-header">
-            <div class="ai-icon">✦</div>
-            <div>
-              <h2>Nova AI Assistant</h2>
-              <p>Your intelligent Gmail workspace</p>
-            </div>
-          </div>
 
-          <div class="ai-content">
+    <button
+        id="open"
+        class="action primary"
+    >
+        Open in Gmail
+    </button>
 
-            <div class="suggestion">
-              <strong>Inbox summary</strong>
-              <p>
-                You have 12 unread emails. Three appear urgent and two are
-                newsletters.
-              </p>
-              <button data-command="Summarize my inbox">
-                Summarize inbox
-              </button>
-            </div>
 
-            <div class="suggestion">
-              <strong>Suggested action</strong>
-              <p>
-                I found an email from Sarah requesting a response about the
-                project timeline.
-              </p>
-              <button data-command="Draft a reply to Sarah">
-                Draft reply
-              </button>
-            </div>
+    <button
+        id="regen"
+        class="action"
+    >
+        Regenerate
+    </button>
 
-            <div class="suggestion">
-              <strong>Quick command</strong>
-              <p>
-                Ask Nova to find, summarize, organize, or draft emails.
-              </p>
-            </div>
 
-          </div>
+</div>
 
-          <form class="ai-input" id="aiForm">
-            <input
-              id="aiCommand"
-              placeholder="Ask Nova anything..."
-              autocomplete="off"
-            >
-            <button type="submit">➤</button>
-          </form>
 
-        </aside>
+</div>
 
-      </section>
-    </main>
-  </div>
 
-  <div class="modal" id="composeModal">
-    <div class="compose-window">
 
-      <div class="compose-title">
-        <strong>New email</strong>
-        <button class="close" id="closeCompose">×</button>
-      </div>
+<script>
 
-      <form class="compose-form" id="composeForm">
-        <input id="emailTo" placeholder="To">
-        <input id="emailSubject" placeholder="Subject">
-        <textarea id="emailBody" placeholder="Write your message..."></textarea>
 
-        <div class="compose-actions">
-          <button
-            type="button"
-            class="ai-generate"
-            id="generateEmail"
-          >
-            ✦ Generate with Nova
-          </button>
+// --------------------------------------------------
+// DOM REFERENCES
+// --------------------------------------------------
 
-          <button class="send" type="submit">
-            Send email
-          </button>
-        </div>
-      </form>
+const $ =
+    id => document.getElementById(id);
 
-    </div>
-  </div>
 
-  <script>
-    const composeButton = document.getElementById("composeButton");
-    const composeModal = document.getElementById("composeModal");
-    const closeCompose = document.getElementById("closeCompose");
-    const composeForm = document.getElementById("composeForm");
-    const aiForm = document.getElementById("aiForm");
-    const aiCommand = document.getElementById("aiCommand");
-    const generateEmail = document.getElementById("generateEmail");
-    const emailBody = document.getElementById("emailBody");
+const mic =
+    $("mic");
 
-    composeButton.addEventListener("click", () => {
-      composeModal.classList.add("show");
-    });
 
-    closeCompose.addEventListener("click", () => {
-      composeModal.classList.remove("show");
-    });
+const status =
+    $("status");
 
-    composeModal.addEventListener("click", event => {
-      if (event.target === composeModal) {
-        composeModal.classList.remove("show");
-      }
-    });
 
-    composeForm.addEventListener("submit", async event => {
-      event.preventDefault();
+const commandBox =
+    $("command");
 
-      const payload = {
-        to: document.getElementById("emailTo").value,
-        subject: document.getElementById("emailSubject").value,
-        body: emailBody.value
-      };
 
-      // Send this to your backend Gmail API endpoint.
-      const response = await fetch("/api/gmail/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
+const editor =
+    $("editor");
 
-      if (response.ok) {
-        alert("Email sent successfully.");
-        composeModal.classList.remove("show");
-        composeForm.reset();
-      }
-    });
 
-    generateEmail.addEventListener("click", async () => {
-      const prompt = emailBody.value || "Write a professional email";
+const recipient =
+    $("recipient");
 
-      const response = await fetch("/api/ai/draft-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          prompt
-        })
-      });
 
-      const data = await response.json();
+const subject =
+    $("subject");
 
-      if (data.body) {
-        emailBody.value = data.body;
-      }
-    });
 
-    aiForm.addEventListener("submit", async event => {
-      event.preventDefault();
+const body =
+    $("body");
 
-      const command = aiCommand.value.trim();
 
-      if (!command) {
+
+// --------------------------------------------------
+// SPEECH RECOGNITION
+// --------------------------------------------------
+
+const SR =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+
+let recognition;
+
+let listening = false;
+
+
+
+// --------------------------------------------------
+// COMMAND STATE
+// --------------------------------------------------
+
+let lastCommand = "";
+
+
+// Prevent duplicate email generation
+
+let emailGenerated = false;
+
+
+// Prevent multiple requests at the same time
+
+let generatingEmail = false;
+
+
+// YouTube tab
+
+let youtubeTab = null;
+
+
+
+// --------------------------------------------------
+// SPEECH RECOGNITION SETUP
+// --------------------------------------------------
+
+if(!SR){
+
+    status.textContent =
+        "Speech recognition unavailable";
+
+    mic.disabled = true;
+
+}
+else{
+
+    recognition =
+        new SR();
+
+
+    recognition.lang =
+        "en-US";
+
+
+    recognition.continuous =
+        false;
+
+
+    recognition.interimResults =
+        false;
+
+
+
+    recognition.onstart = () => {
+
+        listening = true;
+
+        mic.classList.add(
+            "listening"
+        );
+
+        status.textContent =
+            "Listening...";
+
+    };
+
+
+
+    recognition.onend = () => {
+
+        listening = false;
+
+        mic.classList.remove(
+            "listening"
+        );
+
+    };
+
+
+
+    recognition.onerror = e => {
+
+        listening = false;
+
+        mic.classList.remove(
+            "listening"
+        );
+
+        status.textContent =
+            "Voice error: " +
+            e.error;
+
+    };
+
+
+
+    recognition.onresult = e => {
+
+        const text =
+            e.results[0][0]
+            .transcript
+            .trim();
+
+
+        if(!text){
+
+            status.textContent =
+                "No command detected";
+
+            return;
+
+        }
+
+
+        lastCommand =
+            text;
+
+
+        commandBox.textContent =
+            text;
+
+
+        processCommand(
+            text
+        );
+
+    };
+
+
+
+    mic.onclick = () => {
+
+        if(listening)
+            return;
+
+
+        try{
+
+            recognition.start();
+
+        }
+        catch(e){
+
+            console.log(e);
+
+        }
+
+    };
+
+}
+
+
+
+// --------------------------------------------------
+// GMAIL KEYWORD DETECTION
+// --------------------------------------------------
+//
+// Gmail requires BOTH:
+//
+// create
+// email
+//
+// Examples:
+//
+// "create email for my boss"
+// "create an email for my manager"
+//
+// --------------------------------------------------
+
+function isGmail(command){
+
+    const hasCreate =
+        /\bcreate\b/i.test(command);
+
+
+    const hasEmail =
+        /\bemail\b/i.test(command);
+
+
+    return (
+        hasCreate &&
+        hasEmail
+    );
+
+}
+
+
+
+// --------------------------------------------------
+// YOUTUBE KEYWORD DETECTION
+// --------------------------------------------------
+//
+// YouTube requires:
+//
+// play
+//
+// OR
+//
+// song
+//
+// Examples:
+//
+// "play believer"
+// "play a song"
+// "song believer"
+//
+// --------------------------------------------------
+
+function isYouTube(command){
+
+    return (
+        /\bplay\b/i.test(command) ||
+        /\bsong\b/i.test(command)
+    );
+
+}
+
+
+
+// --------------------------------------------------
+// MAIN COMMAND PROCESSOR
+// --------------------------------------------------
+
+async function processCommand(command){
+
+
+    // ----------------------------------------------
+    // CHECK COMMAND TYPE
+    // ----------------------------------------------
+
+    const gmail =
+        isGmail(command);
+
+
+    const youtube =
+        isYouTube(command);
+
+
+
+    // ----------------------------------------------
+    // GMAIL COMMAND
+    // ----------------------------------------------
+
+    if(gmail){
+
+        // Prevent duplicate generation
+
+        if(generatingEmail){
+
+            status.textContent =
+                "Email is already being generated...";
+
+            return;
+
+        }
+
+
+        // Prevent the same command from generating
+        // another email
+
+        if(
+            emailGenerated &&
+            command === lastCommand
+        ){
+
+            status.textContent =
+                "Email already generated.";
+
+            return;
+
+        }
+
+
+        generatingEmail = true;
+
+
+        status.textContent =
+            "Generating email...";
+
+
+        try{
+
+
+            const response =
+                await fetch(
+                    "/agent",
+                    {
+
+                        method:"POST",
+
+                        headers:{
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                command:command
+                            })
+
+                    }
+                );
+
+
+
+            const data =
+                await response.json();
+
+
+
+            if(
+                !response.ok ||
+                !data.success
+            ){
+
+                throw Error(
+                    data.message ||
+                    "Email request failed"
+                );
+
+            }
+
+
+
+            // Show ONE generated email
+
+            showEmail(
+                data
+            );
+
+
+            emailGenerated = true;
+
+
+        }
+        catch(error){
+
+            console.error(
+                error
+            );
+
+
+            status.textContent =
+                error.message ||
+                "Email generation failed";
+
+        }
+        finally{
+
+            generatingEmail = false;
+
+        }
+
+
         return;
-      }
 
-      const response = await fetch("/api/ai/command", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          command
-        })
-      });
+    }
 
-      const data = await response.json();
 
-      console.log("AI response:", data);
-      aiCommand.value = "";
-    });
 
-    document.querySelectorAll("[data-command]").forEach(button => {
-      button.addEventListener("click", () => {
-        aiCommand.value = button.dataset.command;
-        aiCommand.focus();
-      });
-    });
-  </script>
+    // ----------------------------------------------
+    // YOUTUBE COMMAND
+    // ----------------------------------------------
+
+    else if(youtube){
+
+        status.textContent =
+            "Finding song...";
+
+
+        try{
+
+
+            const response =
+                await fetch(
+                    "/youtube/play",
+                    {
+
+                        method:"POST",
+
+                        headers:{
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                command:command
+                            })
+
+                    }
+                );
+
+
+
+            const data =
+                await response.json();
+
+
+
+            if(
+                !response.ok ||
+                !data.success
+            ){
+
+                throw Error(
+                    data.message ||
+                    "YouTube request failed"
+                );
+
+            }
+
+
+
+            playYouTube(
+                data
+            );
+
+
+        }
+        catch(error){
+
+            console.error(
+                error
+            );
+
+
+            status.textContent =
+                error.message ||
+                "YouTube request failed";
+
+        }
+
+
+        return;
+
+    }
+
+
+
+    // ----------------------------------------------
+    // UNKNOWN COMMAND
+    // ----------------------------------------------
+
+    else{
+
+        status.textContent =
+            "Please say 'create email' or 'play song'.";
+
+        return;
+
+    }
+
+}
+
+
+
+// --------------------------------------------------
+// SHOW GENERATED EMAIL
+// --------------------------------------------------
+
+function showEmail(data){
+
+
+    recipient.dataset.email =
+        data.recipient || "";
+
+
+    recipient.textContent =
+        data.recipient
+        ? "To: " + data.recipient
+        : "Recipient not specified";
+
+
+    subject.value =
+        data.subject || "";
+
+
+    body.value =
+        data.body || "";
+
+
+    editor.style.display =
+        "block";
+
+
+    status.textContent =
+        "Email ready. Review or edit it.";
+
+}
+
+
+
+// --------------------------------------------------
+// OPEN GMAIL
+// --------------------------------------------------
+
+$("open").onclick = () => {
+
+
+    const url =
+        "https://mail.google.com/mail/u/0/?" +
+
+        new URLSearchParams({
+
+            view:"cm",
+
+            fs:"1",
+
+            to:
+                recipient.dataset.email || "",
+
+            su:
+                subject.value,
+
+            body:
+                body.value
+
+        });
+
+
+
+    const win =
+        window.open(
+            url,
+            "NovaGmail"
+        );
+
+
+
+    if(!win){
+
+        status.textContent =
+            "Please allow popups for this site.";
+
+    }
+
+};
+
+
+
+// --------------------------------------------------
+// REGENERATE BUTTON
+// --------------------------------------------------
+//
+// No automatic second generation.
+//
+// Clicking this button also does NOT call /agent.
+// --------------------------------------------------
+
+$("regen").onclick = () => {
+
+    status.textContent =
+        "Email already generated. Edit the existing email.";
+
+};
+
+
+
+// --------------------------------------------------
+// YOUTUBE PLAYBACK
+// --------------------------------------------------
+
+function playYouTube(data){
+
+
+    if(
+        !youtubeTab ||
+        youtubeTab.closed
+    ){
+
+        youtubeTab =
+            window.open(
+                data.url,
+                "NovaYouTube"
+            );
+
+    }
+    else{
+
+        youtubeTab.location.href =
+            data.url;
+
+        youtubeTab.focus();
+
+    }
+
+
+    status.textContent =
+        "Playing";
+
+}
+
+
+</script>
+
 
 </body>
+
 </html>
