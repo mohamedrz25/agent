@@ -4,12 +4,11 @@ import urllib.parse
 
 
 KEYWORDS = (
-  "gmail", "email", "e-mail", "mail"
-  "write an email", "send an email", "draft an email",
-  "compose an email", "write mail", "send mail", "draft mail",
-  "compose mail"
-) 
-
+    "gmail", "email", "e-mail", "mail",
+    "write an email", "send an email", "draft an email",
+    "compose an email", "write mail", "send mail", "draft mail",
+    "compose mail"
+)
 
 def is_email_command(text):
     text = text.lower()
@@ -26,6 +25,8 @@ def extract_email(text):
     )
     if match:
         return f"{match.group(1)}@{match.group(2)}.{match.group(3)}"
+
+    return ""
 
 def create_gmail_url(subject="", body="", recipient=""):
     params = urllib.parse.urlencode({
